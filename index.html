@@ -25,6 +25,9 @@
     
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,13 +85,15 @@
         .nav-container {
             pointer-events: auto;
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             background: rgba(0,0,0,0.5);
             padding: 1rem 2rem;
             border-radius: 99px;
             border: 1px solid rgba(0, 243, 255, 0.2);
             backdrop-filter: blur(10px);
             transition: border-color 0.2s, box-shadow 0.2s;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .nav-container.glitching {
@@ -100,7 +105,7 @@
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
             text-transform: uppercase;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 2px;
             transition: all 0.3s ease;
             cursor: pointer;
@@ -209,6 +214,28 @@
             font-weight: bold;
         }
 
+        /* Action Buttons */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--color-watcher-cyan);
+            color: var(--color-watcher-cyan);
+            padding: 1rem 2rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .action-btn:hover {
+            background: var(--color-watcher-cyan);
+            color: black;
+            box-shadow: 0 0 20px var(--color-watcher-cyan);
+        }
+
         /* Modal */
         #modal-backdrop {
             position: fixed;
@@ -256,9 +283,11 @@
     <div id="ui-overlay">
         <nav class="nav-container" id="main-nav">
             <a href="#home" class="nav-link active" data-target="home">Home</a>
+            <a href="#simulation" class="nav-link" data-target="simulation">Simulation</a>
             <a href="#archive" class="nav-link" data-target="archive">Archive</a>
             <a href="#manifests" class="nav-link" data-target="manifests">Manifests</a>
             <a href="#protocols" class="nav-link" data-target="protocols">Protocols</a>
+            <a href="#comms" class="nav-link" data-target="comms">Comms</a>
         </nav>
     </div>
 
@@ -274,13 +303,40 @@
             </div>
         </section>
 
-        <!-- SECTION: ARCHIVE -->
+        <!-- SECTION: SIMULATION (Foundry/Syrinscape) -->
+        <section id="simulation">
+            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">SIMULATION DECK</h2>
+            <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
+                <a href="http://html-context.gl.at.ply.gg:5928" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12">
+                    <i data-lucide="monitor-play" class="w-12 h-12 text-watcher-cyan mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">FOUNDRY VTT</h3>
+                    <p class="text-xs text-gray-400">Initialize Virtual Tabletop</p>
+                </a>
+                <a href="https://app.syrinscape.com/80cf2defd71040819f087245b4e902f7/player/" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12">
+                    <i data-lucide="music" class="w-12 h-12 text-magenta-magic mb-4 text-[#d946ef] group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">SYRINSCAPE</h3>
+                    <p class="text-xs text-gray-400">Audio Feed & Ambiance</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- SECTION: ARCHIVE (LegendKeeper) -->
         <section id="archive">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">THE ARCHIVES</h2>
-            <!-- Clean Archive: Button Only -->
-            <a href="https://legendkeeper.com" target="_blank" class="inline-block border border-watcher-cyan text-watcher-cyan px-8 py-4 hover:bg-watcher-cyan hover:text-black transition-all hover:shadow-[0_0_30px_#00f3ff] uppercase tracking-widest text-sm font-bold bg-black/40 backdrop-blur-sm">
-                Open Database
-            </a>
+            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-8 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">ARCHIVE ACCESS</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl px-4">
+                <a href="https://app.legendkeeper.com/" target="_blank" class="action-btn text-center">
+                    <i data-lucide="database" class="w-4 h-4"></i> MAIN DATABASE
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/ckzef0fi5i28c0808zhyw30as/ckzef0g120002036cqtjlpd5r" target="_blank" class="action-btn text-center border-[#4fffa8] text-[#4fffa8] hover:bg-[#4fffa8]">
+                    <i data-lucide="scroll" class="w-4 h-4"></i> ENOXIA LORE
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/clt34sk1p13j80jkt4y02fyzg/clt34tf7w002q356ixg906ypo" target="_blank" class="action-btn text-center border-purple-500 text-purple-500 hover:bg-purple-500">
+                    <i data-lucide="skull" class="w-4 h-4"></i> CALL OF CTHULHU
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/cl7ta2od0lrrs0710y352bvyl/cl7ta2p7m0002033c3rzcubzu" target="_blank" class="action-btn text-center border-green-600 text-green-600 hover:bg-green-600">
+                    <i data-lucide="triangle" class="w-4 h-4"></i> DELTA GREEN
+                </a>
+            </div>
         </section>
 
         <!-- SECTION: MANIFESTS -->
@@ -309,6 +365,23 @@
                 </div>
             </div>
         </section>
+
+        <!-- SECTION: COMMS (Socials) -->
+        <section id="comms">
+            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">SUBSPACE COMMS</h2>
+            <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
+                <a href="https://discord.gg/4UQkFYRuCv" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12 border-[#5865F2] hover:shadow-[0_0_20px_#5865F2]">
+                    <i data-lucide="message-circle" class="w-12 h-12 text-[#5865F2] mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">DISCORD</h3>
+                    <p class="text-xs text-gray-400">Join the Community</p>
+                </a>
+                <a href="https://www.youtube.com/@RPGFIENDS/playlists" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12 border-[#FF0000] hover:shadow-[0_0_20px_#FF0000]">
+                    <i data-lucide="youtube" class="w-12 h-12 text-[#FF0000] mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">YOUTUBE</h3>
+                    <p class="text-xs text-gray-400">Session Recordings</p>
+                </a>
+            </div>
+        </section>
     </main>
 
     <!-- Unit Modal -->
@@ -334,6 +407,8 @@
     </div>
 
     <script>
+        lucide.createIcons();
+
         // --- DATA & UI SETUP ---
         const UNITS = [
             {
@@ -441,6 +516,8 @@
             } 
             else if (target === 'manifests') { pos = { x: -6, y: 5, z: 9 }; lookAt = { x: 2, y: -1, z: 0 }; }
             else if (target === 'protocols') { pos = { x: 0, y: -6, z: 10 }; lookAt = { x: 0, y: 2, z: 0 }; }
+            else if (target === 'simulation') { pos = { x: 6, y: 4, z: 8 }; lookAt = { x: -2, y: 0, z: 0 }; }
+            else if (target === 'comms') { pos = { x: -5, y: -2, z: 8 }; lookAt = { x: 2, y: 1, z: 0 }; }
             
             // Trigger Warp
             isWarping = true;
@@ -650,7 +727,7 @@
         const pupil = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.12, 32), new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide }));
         pupil.position.z = 0.26; eyeCore.add(pupil);
 
-        const beamGeo = new THREE.CylinderGeometry(0.005, 0.04, 1, 8, 1, true);
+        const beamGeo = new THREE.CylinderGeometry(0.005, 0.02, 1, 8, 1, true);
         beamGeo.translate(0, 0.5, 0); 
         beamGeo.rotateX(Math.PI / 2);
         const beamMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
@@ -753,23 +830,19 @@
 
             // CAMERA FOLLOW LOGIC
             if(currentSection === 'archive') {
-                // 1. Determine Target Look Direction (From Center to Moon)
                 const toMoon = watcherGroup.position.clone().normalize();
                 const up = new THREE.Vector3(0, 1, 0);
                 const right = new THREE.Vector3().crossVectors(up, toMoon).normalize();
                 
-                // 2. Set Camera Target Position relative to Moon
                 const targetCamPos = watcherGroup.position.clone();
-                targetCamPos.add(toMoon.multiplyScalar(1.2)); // Tight Zoom distance
-                targetCamPos.add(right.multiplyScalar(1.0)); // Offset left
-                targetCamPos.y += 0.5; // Slight elevation
+                targetCamPos.add(toMoon.multiplyScalar(1.2)); 
+                targetCamPos.add(right.multiplyScalar(1.0)); 
+                targetCamPos.y += 0.5; 
                 
-                // 3. Smooth Camera Movement
                 camera.position.lerp(targetCamPos, 0.1);
                 controls.target.lerp(watcherGroup.position, 0.1);
                 
-                // 4. Moon Looks at Camera (Eye Contact)
-                // We rotate the entire GROUP to face the camera for correct orientation
+                // FIX: Rotate the GROUP to face camera, ensuring eye contact
                 watcherGroup.lookAt(camera.position);
                 
                 // Reset child rotation to ensure alignment
