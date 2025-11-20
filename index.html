@@ -560,29 +560,31 @@
         closeBtn.onclick = () => modal.classList.remove('visible');
         modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('visible'); };
 
-        // --- SERVER STATUS CHECK (Image Hack - Fixed) ---
+        // --- SERVER STATUS CHECK (Delayed w/ Image Hack) ---
         const foundryUrl = "https://foundryvtt.rpgfiends.com"; 
         const statusEl = document.getElementById('status-bar');
 
         function checkServer() {
-            // Attempt to load a standard Foundry asset to bypass CORS for status check
-            // We use a cache-busting timestamp to ensure it actually checks the server
-            const img = new Image();
-            img.src = foundryUrl + "/icons/svg/d20-grey.svg?t=" + new Date().getTime();
+            // 1. Wait 3 seconds for the "Establish Uplink" effect
+            setTimeout(() => {
+                const img = new Image();
+                // Try loading a standard Foundry asset
+                img.src = foundryUrl + "/icons/svg/d20-grey.svg?t=" + new Date().getTime();
 
-            img.onload = function() {
-                // Success: Server is up
-                statusEl.innerHTML = '<span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>';
-                statusEl.style.color = "var(--color-watcher-cyan)";
-                statusEl.style.borderColor = "rgba(0, 243, 255, 0.3)";
-            };
+                img.onload = function() {
+                    // Success
+                    statusEl.innerHTML = '<span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>';
+                    statusEl.style.color = "var(--color-watcher-cyan)";
+                    statusEl.style.borderColor = "rgba(0, 243, 255, 0.3)";
+                };
 
-            img.onerror = function() {
-                // Failure: Server is down OR browser blocked it.
-                statusEl.innerHTML = '<span class="text-red-500">●</span> SIGNAL LOST // OFFLINE <span class="blink">_</span>';
-                statusEl.style.color = "var(--color-avarice-red)"; 
-                statusEl.style.borderColor = "rgba(255, 50, 50, 0.3)";
-            };
+                img.onerror = function() {
+                    // Failure
+                    statusEl.innerHTML = '<span class="text-red-500">●</span> SIGNAL LOST // OFFLINE <span class="blink">_</span>';
+                    statusEl.style.color = "var(--color-avarice-red)"; 
+                    statusEl.style.borderColor = "rgba(255, 50, 50, 0.3)";
+                };
+            }, 3000); // 3 second delay
         }
         
         window.addEventListener('load', checkServer);
