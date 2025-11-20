@@ -146,10 +146,9 @@
         }
 
         /* Typography */
-        #welcome-text {
+        /* The Main Title Style */
+        .enoxia-title-style {
             font-family: 'Cinzel Decorative', serif;
-            font-size: clamp(4rem, 8vw, 8rem);
-            color: var(--color-enoxia-green);
             text-shadow: 
                 0 0 10px rgba(0,0,0,0.9),
                 0 0 20px rgba(0,0,0,0.7),
@@ -158,7 +157,20 @@
             position: relative;
             z-index: 20;
         }
+
+        #welcome-text {
+            font-size: clamp(4rem, 8vw, 8rem);
+            color: var(--color-enoxia-green);
+        }
         
+        /* Section Headers using the same style but smaller */
+        .section-header {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            color: var(--color-watcher-cyan); /* Cyan by default, can override */
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
         #status-bar {
             margin-top: 2rem;
             font-size: 0.8rem;
@@ -297,7 +309,7 @@
         <!-- SECTION: HOME -->
         <section id="home" class="active">
             <div class="text-center z-20 pointer-events-none select-none">
-                <h1 id="welcome-text">ENOXIA<br><span class="text-2xl font-sans tracking-[0.5em] text-white/60 text-shadow-none">THE AWAKENING</span></h1>
+                <h1 id="welcome-text" class="enoxia-title-style">ENOXIA<br><span class="text-2xl font-sans tracking-[0.5em] text-white/60 text-shadow-none">THE AWAKENING</span></h1>
             </div>
             <div id="status-bar">
                 <span class="text-yellow-400 animate-pulse">●</span> ESTABLISHING UPLINK... <span class="blink">_</span>
@@ -306,7 +318,7 @@
 
         <!-- SECTION: SIMULATION (Foundry/Syrinscape) -->
         <section id="simulation">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">SIMULATION DECK</h2>
+            <h2 class="section-header enoxia-title-style">SIMULATION DECK</h2>
             <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
                 <a href="https://foundryvtt.rpgfiends.com/" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12">
                     <i data-lucide="monitor-play" class="w-12 h-12 text-watcher-cyan mb-4 group-hover:scale-110 transition-transform"></i>
@@ -323,7 +335,7 @@
 
         <!-- SECTION: ARCHIVE (LegendKeeper) -->
         <section id="archive">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-8 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">ARCHIVE ACCESS</h2>
+            <h2 class="section-header enoxia-title-style">ARCHIVE ACCESS</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl px-4">
                 <a href="https://app.legendkeeper.com/" target="_blank" class="action-btn text-center">
                     <i data-lucide="database" class="w-4 h-4"></i> MAIN DATABASE
@@ -342,7 +354,7 @@
 
         <!-- SECTION: MANIFESTS -->
         <section id="manifests">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">UNIT MANIFESTS</h2>
+            <h2 class="section-header enoxia-title-style">UNIT MANIFESTS</h2>
             <div class="card-grid" id="manifest-grid">
                 <!-- Cards injected by JS -->
             </div>
@@ -350,7 +362,7 @@
 
         <!-- SECTION: PROTOCOLS -->
         <section id="protocols">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">SYSTEM PROTOCOLS</h2>
+            <h2 class="section-header enoxia-title-style">SYSTEM PROTOCOLS</h2>
             <div class="card-grid">
                 <div class="manifest-card cursor-default">
                     <h3 class="text-xl font-bold text-enoxia-green mb-2">PROTOCOL 01: AEONIC LAW</h3>
@@ -369,7 +381,7 @@
 
         <!-- SECTION: COMMS (Socials) -->
         <section id="comms">
-            <h2 class="text-4xl font-['Cinzel_Decorative'] text-watcher-cyan mb-6 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">SUBSPACE COMMS</h2>
+            <h2 class="section-header enoxia-title-style">SUBSPACE COMMS</h2>
             <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
                 <a href="https://discord.gg/4UQkFYRuCv" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12 border-[#5865F2] hover:shadow-[0_0_20px_#5865F2]">
                     <i data-lucide="message-circle" class="w-12 h-12 text-[#5865F2] mb-4 group-hover:scale-110 transition-transform"></i>
