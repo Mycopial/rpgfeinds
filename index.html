@@ -560,35 +560,29 @@
         closeBtn.onclick = () => modal.classList.remove('visible');
         modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('visible'); };
 
-        // --- SERVER STATUS CHECK ---
-        const foundryUrl = "https://foundryvtt.rpgfiends.com/"; 
+        // --- SERVER STATUS CHECK (Image Hack - Fixed) ---
+        const foundryUrl = "https://foundryvtt.rpgfiends.com"; 
         const statusEl = document.getElementById('status-bar');
 
-        async function checkServer() {
-            try {
-                // Attempt to fetch the server. Using no-cors allows for an opaque response if server is active.
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 2500); // 2.5s timeout
+        function checkServer() {
+            // Attempt to load a standard Foundry asset to bypass CORS for status check
+            // We use a cache-busting timestamp to ensure it actually checks the server
+            const img = new Image();
+            img.src = foundryUrl + "/icons/svg/d20-grey.svg?t=" + new Date().getTime();
 
-                await fetch(foundryUrl, { 
-                    method: 'HEAD', 
-                    mode: 'no-cors', 
-                    signal: controller.signal 
-                });
-                clearTimeout(id);
-
-                // If we reach here, the server is likely UP
+            img.onload = function() {
+                // Success: Server is up
                 statusEl.innerHTML = '<span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>';
                 statusEl.style.color = "var(--color-watcher-cyan)";
                 statusEl.style.borderColor = "rgba(0, 243, 255, 0.3)";
+            };
 
-            } catch (error) {
-                // Failed to fetch or timed out -> Server DOWN or blocked by mixed content
-                console.log("Server check failed:", error);
+            img.onerror = function() {
+                // Failure: Server is down OR browser blocked it.
                 statusEl.innerHTML = '<span class="text-red-500">●</span> SIGNAL LOST // OFFLINE <span class="blink">_</span>';
                 statusEl.style.color = "var(--color-avarice-red)"; 
                 statusEl.style.borderColor = "rgba(255, 50, 50, 0.3)";
-            }
+            };
         }
         
         window.addEventListener('load', checkServer);
@@ -685,7 +679,7 @@
             vertices.push(v);
         }
 
-        // 4. PHANTOM LEYLINE SYSTEM
+        // 4. PHANTOM LEYLINE SYSTEM (Random, Seldom, Flowing)
         const pulses = [];
         const riverShader = {
             uniforms: {
@@ -754,6 +748,7 @@
 
         const watcherGroup = new THREE.Group();
         scene.add(watcherGroup);
+        // Intact Moon
         const paleMoon = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 2), new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.3 }));
         watcherGroup.add(paleMoon);
         const eyeCore = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshBasicMaterial({ color: 0x000000 }));
@@ -761,12 +756,12 @@
         const pupil = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.12, 32), new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide }));
         pupil.position.z = 0.26; eyeCore.add(pupil);
 
-        const beamGeo = new THREE.CylinderGeometry(0.005, 0.02, 1, 8, 1, true);
+        const beamGeo = new THREE.CylinderGeometry(0.005, 0.04, 1, 8, 1, true);
         beamGeo.translate(0, 0.5, 0); 
         beamGeo.rotateX(Math.PI / 2);
         const beamMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
         const beam = new THREE.Mesh(beamGeo, beamMat);
-        paleMoon.add(beam);
+        watcherGroup.add(beam);
 
         const redMoon = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), new THREE.MeshBasicMaterial({ color: 0xff3333 }));
         scene.add(redMoon);
@@ -887,17 +882,18 @@
                 const worldTarget = currentTarget.clone().normalize().multiplyScalar(3.05); 
                 worldTarget.applyMatrix4(planetGroup.matrixWorld);
                 watcherGroup.lookAt(worldTarget);
-                // Ensure child is reset
-                paleMoon.rotation.set(0,0,0);
                 
+                // Ensure proper orientation of components
+                paleMoon.rotation.set(0, 0, 0);
+
                 const dist = watcherGroup.position.distanceTo(worldTarget);
                 beam.scale.z = dist; 
                 beamMat.opacity += (0.8 - beamMat.opacity) * 0.1;
             } else {
                 dummyTarget.set(mouse.x*0.01, -mouse.y*0.01, 10);
                 watcherGroup.lookAt(dummyTarget);
-                // Ensure child is reset
-                paleMoon.rotation.set(0,0,0);
+                // Ensure proper orientation
+                paleMoon.rotation.set(0, 0, 0);
                 
                 beamMat.opacity += (0.0 - beamMat.opacity) * 0.1;
             }
