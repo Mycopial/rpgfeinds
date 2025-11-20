@@ -167,6 +167,7 @@
             padding: 0.5rem 1rem;
             border: 1px solid rgba(0, 243, 255, 0.3);
             backdrop-filter: blur(4px);
+            transition: all 0.5s ease;
         }
 
         .card-grid {
@@ -299,7 +300,7 @@
                 <h1 id="welcome-text">ENOXIA<br><span class="text-2xl font-sans tracking-[0.5em] text-white/60 text-shadow-none">THE AWAKENING</span></h1>
             </div>
             <div id="status-bar">
-                <span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>
+                <span class="text-yellow-400 animate-pulse">●</span> ESTABLISHING UPLINK... <span class="blink">_</span>
             </div>
         </section>
 
@@ -559,6 +560,39 @@
         closeBtn.onclick = () => modal.classList.remove('visible');
         modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('visible'); };
 
+        // --- SERVER STATUS CHECK ---
+        const foundryUrl = "http://html-context.gl.at.ply.gg:5928"; 
+        const statusEl = document.getElementById('status-bar');
+
+        async function checkServer() {
+            try {
+                // Attempt to fetch the server. Using no-cors allows for an opaque response if server is active.
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 2500); // 2.5s timeout
+
+                await fetch(foundryUrl, { 
+                    method: 'HEAD', 
+                    mode: 'no-cors', 
+                    signal: controller.signal 
+                });
+                clearTimeout(id);
+
+                // If we reach here, the server is likely UP
+                statusEl.innerHTML = '<span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>';
+                statusEl.style.color = "var(--color-watcher-cyan)";
+                statusEl.style.borderColor = "rgba(0, 243, 255, 0.3)";
+
+            } catch (error) {
+                // Failed to fetch or timed out -> Server DOWN or blocked by mixed content
+                console.log("Server check failed:", error);
+                statusEl.innerHTML = '<span class="text-red-500">●</span> SIGNAL LOST // OFFLINE <span class="blink">_</span>';
+                statusEl.style.color = "var(--color-avarice-red)"; 
+                statusEl.style.borderColor = "rgba(255, 50, 50, 0.3)";
+            }
+        }
+        
+        window.addEventListener('load', checkServer);
+
         // --- THREE.JS SETUP ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
@@ -651,7 +685,7 @@
             vertices.push(v);
         }
 
-        // 4. PHANTOM LEYLINE SYSTEM (Random, Seldom, Flowing)
+        // 4. PHANTOM LEYLINE SYSTEM
         const pulses = [];
         const riverShader = {
             uniforms: {
