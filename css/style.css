@@ -432,51 +432,6 @@ section.active {
 }
 
 /* --- HOLOGRAPHIC AVATAR EFFECT --- */
-.manifest-card:hover .ddb-avatar {
-    filter: sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2);
-    box-shadow: 0 0 15px var(--color-watcher-cyan), inset 0 0 10px var(--color-watcher-cyan);
-    animation: holo-flicker 0.1s infinite;
-    position: relative;
-}
-
-/* Scanlines overlay for avatar - requires wrapping avatar or using ::after on parent if possible. 
-   Since img tags can't have ::after, we'll apply a scanline background to the image itself using multiple backgrounds if supported, 
-   or rely on the filter + border. Let's stick to the filter + border for simplicity and robustness. */
-
-@keyframes holo-flicker {
-    0% {
-        opacity: 0.9;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(5px);
-}
-
-#modal-backdrop.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-#modal-content {
-    background: #0a0a0e;
-    border: 2px solid var(--color-watcher-cyan);
-    width: 90%;
-    max-width: 600px;
-    padding: 2rem;
-    position: relative;
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-    box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
 }
 
 #modal-backdrop.visible #modal-content {
@@ -651,3 +606,12 @@ section.active {
         opacity: 0.95;
     }
 }
+
+ / *   V o l u m e   c o n t r o l s   a u t o - h i d e   * /   . v o l u m e - h i d d e n    {
+               o p a c i t y :    0    ! i m p o r t a n t ;
+               p o i n t e r - e v e n t s :    n o n e    ! i m p o r t a n t ;
+               t r a n s i t i o n :    o p a c i t y   0 . 3 s   e a s e    ! i m p o r t a n t ;
+       
+}
+
+     

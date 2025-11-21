@@ -1,38 +1,85 @@
 lucide.createIcons();
 const isMobile = window.innerWidth < 768;
 
-// --- AUDIO SETUP ---
+// --- AUDIO SETUP WITH VOLUME PERSISTENCE ---
 const audioToggle = document.getElementById('audio-toggle');
 const audio = document.getElementById('ambiance-audio');
 const volumeSlider = document.getElementById('volume-slider');
 const volumeContainer = document.getElementById('volume-container');
 let isMuted = true;
+let volumeHideTimer = null;
 
-// Set initial volume
-audio.volume = 0.5;
+// Restore previous volume and mute state
+const savedVolume = localStorage.getItem('volumeLevel');
+const savedMuted = localStorage.getItem('audioMuted');
+
+audio.volume = savedVolume ? parseFloat(savedVolume) : 0.15;
+volumeSlider.value = audio.volume;
+
+// Only auto-resume if user previously had audio on
+if (savedMuted === 'false') {
+    isMuted = false;
+    audio.play().catch(e => console.log("Resume:", e));
+    audioToggle.innerHTML = '<i data-lucide="volume-2" class="w-6 h-6"></i>';
+    audioToggle.classList.add('animate-pulse');
+    volumeContainer.classList.remove('hidden');
+    volumeContainer.classList.add('volume-visible');
+    startVolumeHideTimer();
+    lucide.createIcons();
+}
 
 audioToggle.addEventListener('click', () => {
     if (isMuted) {
         audio.play().catch(e => console.log("Audio play failed:", e));
         isMuted = false;
-        // Re-create the icon element so Lucide can process it again
+        localStorage.setItem('audioMuted', 'false');
         audioToggle.innerHTML = '<i data-lucide="volume-2" class="w-6 h-6"></i>';
         audioToggle.classList.add('animate-pulse');
         volumeContainer.classList.remove('hidden');
         volumeContainer.classList.add('volume-visible');
+        startVolumeHideTimer();
     } else {
         audio.pause();
         isMuted = true;
+        localStorage.setItem('audioMuted', 'true');
         audioToggle.innerHTML = '<i data-lucide="volume-x" class="w-6 h-6"></i>';
         audioToggle.classList.remove('animate-pulse');
         volumeContainer.classList.add('hidden');
         volumeContainer.classList.remove('volume-visible');
+        if (volumeHideTimer) clearTimeout(volumeHideTimer);
     }
     lucide.createIcons();
 });
 
 volumeSlider.addEventListener('input', (e) => {
     audio.volume = e.target.value;
+    localStorage.setItem('volumeLevel', e.target.value);
+    restartVolumeHideTimer();
+});
+
+// Volume slider auto-hide logic
+function startVolumeHideTimer() {
+    if (volumeHideTimer) clearTimeout(volumeHideTimer);
+    volumeHideTimer = setTimeout(() => {
+        volumeContainer.classList.remove('volume-visible');
+        volumeContainer.classList.add('volume-hidden');
+    }, 3000);
+}
+
+function restartVolumeHideTimer() {
+    volumeContainer.classList.remove('volume-hidden');
+    volumeContainer.classList.add('volume-visible');
+    startVolumeHideTimer();
+}
+
+volumeContainer.addEventListener('mouseenter', () => {
+    if (volumeHideTimer) clearTimeout(volumeHideTimer);
+    volumeContainer.classList.remove('volume-hidden');
+    volumeContainer.classList.add('volume-visible');
+});
+
+volumeContainer.addEventListener('mouseleave', () => {
+    if (!isMuted) startVolumeHideTimer();
 });
 
 // --- UI SETUP ---
@@ -335,9 +382,8 @@ bloomPass.threshold = 0;
 bloomPass.strength = 1.5;
 bloomPass.radius = 0.4;
 
-if (!isMobile) {
-    composer.addPass(bloomPass);
-}
+// Always add bloom - removed mobile restriction per user request
+composer.addPass(bloomPass);
 
 const rgbShift = new THREE.ShaderPass(THREE.RGBShiftShader);
 rgbShift.uniforms['amount'].value = 0.000;
@@ -523,8 +569,66 @@ const beamMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true
 const beam = new THREE.Mesh(beamGeo, beamMat);
 watcherGroup.add(beam);
 
-const redMoon = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), new THREE.MeshBasicMaterial({ color: 0xff3333 }));
-scene.add(redMoon);
+// RED MOON (Chaos/Avarice) - Wireframe with storm eye
+const redMoon = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.3, 1),
+    new THREE.MeshBasicMaterial({
+        color: 0xff3333,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.8
+    })
+);
+const redMoonGroup = new THREE.Group();
+redMoonGroup.add(redMoon);
+
+// Add barely visible dark red storm core to red moon
+const stormCore = new THREE.Mesh(
+    new THREE.CircleGeometry(0.12, 16),
+    new THREE.MeshBasicMaterial({
+        color: 0x330000,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide
+    })
+);
+stormCore.position.z = 0.31;
+redMoon.add(stormCore);
+
+// Add red glow point light
+const redGlow = new THREE.PointLight(0xff3333, 1.5, 4);
+redMoonGroup.add(redGlow);
+scene.add(redMoonGroup);
+
+// CHAOS PARTICLE SYSTEM
+const chaosParticleCount = 50;
+const chaosGeo = new THREE.BufferGeometry();
+const chaosPos = new Float32Array(chaosParticleCount * 3);
+const chaosVel = [];
+
+for (let i = 0; i < chaosParticleCount; i++) {
+    chaosPos[i * 3] = 0;
+    chaosPos[i * 3 + 1] = 0;
+    chaosPos[i * 3 + 2] = 0;
+    chaosVel.push({
+        x: (Math.random() - 0.5) * 0.02,
+        y: (Math.random() - 0.5) * 0.02,
+        z: (Math.random() - 0.5) * 0.02,
+        life: Math.random()
+    });
+}
+chaosGeo.setAttribute('position', new THREE.BufferAttribute(chaosPos, 3));
+
+const chaosMat = new THREE.PointsMaterial({
+    color: 0xff6666,
+    size: 0.05,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending
+});
+
+const chaosParticles = new THREE.Points(chaosGeo, chaosMat);
+redMoonGroup.add(chaosParticles);
 
 const starCount = 15000;
 const starGeo = new THREE.BufferGeometry();
@@ -575,9 +679,20 @@ paleMoon.add(new THREE.PointLight(0x00f3ff, 2, 5));
 
 const mouse = new THREE.Vector2();
 const dummyTarget = new THREE.Vector3();
+let isMouseOnScreen = true;
+
 document.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX - window.innerWidth / 2);
     mouse.y = (e.clientY - window.innerHeight / 2);
+    isMouseOnScreen = true;
+});
+
+document.addEventListener('mouseleave', () => {
+    isMouseOnScreen = false;
+});
+
+document.addEventListener('mouseenter', () => {
+    isMouseOnScreen = true;
 });
 
 const clock = new THREE.Clock();
@@ -608,12 +723,13 @@ function animate() {
         }
     });
 
-    // Continuous Orbit
-    orbitTime += 0.002;
+    // Watcher Moon Orbit (normalized, consistent)
+    orbitTime += 0.0015;
+    const orbitRadius = 6.6; // 10% further from planet
     watcherGroup.position.set(
-        Math.cos(orbitTime) * 6,
-        Math.sin(orbitTime) * 1,
-        Math.sin(orbitTime) * 6
+        Math.cos(orbitTime) * orbitRadius,
+        Math.sin(orbitTime * 0.5) * 0.8,
+        Math.sin(orbitTime) * orbitRadius
     );
 
     // CAMERA FOLLOW LOGIC
@@ -649,15 +765,68 @@ function animate() {
         beam.scale.z = dist;
         beamMat.opacity += (0.8 - beamMat.opacity) * 0.1;
     } else {
-        dummyTarget.set(mouse.x * 0.01, -mouse.y * 0.01, 10);
-        watcherGroup.lookAt(dummyTarget);
+        // Track cursor when on screen, watch planet when cursor leaves
+        const targetLookAt = new THREE.Vector3();
+
+        if (isMouseOnScreen) {
+            // Cursor is on screen - track it directly
+            targetLookAt.set(mouse.x * 0.01, -mouse.y * 0.01, 10);
+        } else {
+            // Cursor off screen - watch the planet with subtle movement
+            const planetCenter = new THREE.Vector3(0, 0, 0);
+            const offset = new THREE.Vector3(
+                Math.sin(time * 0.3) * 0.2,
+                Math.cos(time * 0.25) * 0.15,
+                0
+            );
+            targetLookAt.copy(planetCenter.add(offset));
+        }
+
+        // Smooth rotation using quaternion lerp
+        const currentQuaternion = watcherGroup.quaternion.clone();
+        watcherGroup.lookAt(targetLookAt);
+        const targetQuaternion = watcherGroup.quaternion.clone();
+        watcherGroup.quaternion.copy(currentQuaternion);
+        watcherGroup.quaternion.slerp(targetQuaternion, 0.05);
+
         // Ensure proper orientation
         paleMoon.rotation.set(0, 0, 0);
 
         beamMat.opacity += (0.0 - beamMat.opacity) * 0.1;
     }
 
-    redMoon.position.set(Math.cos(time * 0.3) * 5, Math.sin(time * 0.5) * 2, Math.sin(time * 0.4) * 7);
+    // Red Moon Orbit (varied, rarely repeats)
+    const chaosRadius = 8.8 + Math.sin(time * 0.3) * 1.5 + Math.cos(time * 0.17) * 0.8;
+    const chaosSpeed = 0.25;
+    const chaosHeight = Math.sin(time * 0.4 + Math.PI) * 2.5 + Math.cos(time * 0.23) * 0.7;
+    const chaosAngle = time * chaosSpeed + Math.sin(time * 0.35) * 0.4 + Math.cos(time * 0.19) * 0.3;
+
+    redMoonGroup.position.set(
+        Math.cos(chaosAngle + Math.PI) * chaosRadius,
+        chaosHeight,
+        Math.sin(chaosAngle + Math.PI) * chaosRadius
+    );
+
+    // Make red moon face Watcher moon (eye effect)
+    redMoonGroup.lookAt(watcherGroup.position);
+    redMoon.rotation.set(0, 0, 0);
+
+    // Animate chaos particles
+    const chaosPositions = chaosParticles.geometry.attributes.position.array;
+    for (let i = 0; i < chaosParticleCount; i++) {
+        chaosVel[i].life -= 0.01;
+        if (chaosVel[i].life <= 0) {
+            chaosPositions[i * 3] = 0;
+            chaosPositions[i * 3 + 1] = 0;
+            chaosPositions[i * 3 + 2] = 0;
+            chaosVel[i].life = 1.0;
+        } else {
+            chaosPositions[i * 3] += chaosVel[i].x;
+            chaosPositions[i * 3 + 1] += chaosVel[i].y;
+            chaosPositions[i * 3 + 2] += chaosVel[i].z;
+        }
+    }
+    chaosParticles.geometry.attributes.position.needsUpdate = true;
 
     if (isWarping) {
         starShaderMat.uniforms.warpFactor.value += (1.0 - starShaderMat.uniforms.warpFactor.value) * 0.05;
