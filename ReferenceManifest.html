@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ENOXIA: THE LIVING PORTAL // OMEGA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Three.js Post-Processing -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/RGBShiftShader.js"></script>
+
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-enoxia-green: #4fffa8;
+            --color-watcher-cyan: #00f3ff;
+            --color-avarice-red: #ff3333;
+            --color-magenta-magic: #d946ef;
+            --bg-deep-space: #030305;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: var(--bg-deep-space);
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* UI GLITCH EFFECT */
+        .ui-glitch-active {
+            animation: ui-glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--color-watcher-cyan);
+        }
+        @keyframes ui-glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        /* UI Overlay */
+        #ui-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 2rem;
+            z-index: 50;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-container {
+            pointer-events: auto;
+            display: flex;
+            gap: 1.5rem;
+            background: rgba(0,0,0,0.5);
+            padding: 1rem 2rem;
+            border-radius: 99px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-container.glitching {
+            border-color: var(--color-magenta-magic);
+            box-shadow: 0 0 15px var(--color-magenta-magic);
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--color-watcher-cyan);
+            text-shadow: 0 0 10px var(--color-watcher-cyan);
+        }
+
+        /* Sections */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        section {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            pointer-events: none;
+            padding-top: 80px; 
+        }
+
+        section.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        /* Typography */
+        .enoxia-title-style {
+            font-family: 'Cinzel Decorative', serif;
+            text-shadow: 
+                0 0 10px rgba(0,0,0,0.9),
+                0 0 20px rgba(0,0,0,0.7),
+                0 0 40px rgba(79, 255, 168, 0.2);
+            line-height: 1;
+            position: relative;
+            z-index: 20;
+        }
+
+        #welcome-text {
+            font-size: clamp(4rem, 8vw, 8rem);
+            color: var(--color-enoxia-green);
+        }
+        
+        .section-header {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            color: var(--color-watcher-cyan);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        #status-bar {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: var(--color-watcher-cyan);
+            background: rgba(0,0,0,0.6);
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(4px);
+            transition: all 0.5s ease;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .card-grid::-webkit-scrollbar { width: 6px; }
+        .card-grid::-webkit-scrollbar-track { background: #050505; }
+        .card-grid::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 3px; }
+
+        /* LIVE MANIFEST CARDS */
+        .manifest-card {
+            background: rgba(10, 15, 20, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+        }
+        /* Target Lock Border Effect */
+        .manifest-card.targeting {
+            border-color: #ffff00;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+        }
+        .manifest-card.targeting::after {
+            content: '[ TARGET LOCKED ]';
+            position: absolute;
+            top: 0; right: 0;
+            background: #ffff00;
+            color: black;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            font-weight: bold;
+            z-index: 20;
+        }
+
+        /* NEW: ENGAGE DATA STREAM ANIMATION */
+        .datastream-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 15;
+            backdrop-filter: blur(2px);
+        }
+        
+        .manifest-card:hover .datastream-overlay {
+            opacity: 1;
+        }
+
+        .datastream-text {
+            color: #ffff00;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            border: 1px solid #ffff00;
+            padding: 0.8rem 1.5rem;
+            background: rgba(20, 20, 0, 0.9);
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
+            animation: pulse-stream 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .datastream-text::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,0,0.4), transparent);
+            animation: scan-line 2s infinite linear;
+        }
+
+        @keyframes pulse-stream {
+            0%, 100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 10px rgba(255, 255, 0, 0.3); }
+            50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 25px rgba(255, 255, 0, 0.6); }
+        }
+
+        @keyframes scan-line {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        /* D&D Specific Styles for Manifest */
+        .ddb-avatar {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--color-watcher-cyan);
+            object-fit: cover;
+        }
+        .hp-bar-bg {
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 10px;
+            position: relative;
+        }
+        .hp-bar-fill {
+            height: 100%;
+            background: var(--color-enoxia-green);
+            transition: width 0.5s ease;
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--color-watcher-cyan);
+            color: var(--color-watcher-cyan);
+            padding: 1rem 2rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .action-btn:hover {
+            background: var(--color-watcher-cyan);
+            color: black;
+            box-shadow: 0 0 20px var(--color-watcher-cyan);
+        }
+
+        /* Modal */
+        #modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        #modal-backdrop.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #modal-content {
+            background: #0a0a0e;
+            border: 2px solid var(--color-watcher-cyan);
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+        }
+        #modal-backdrop.visible #modal-content {
+            transform: scale(1);
+        }
+
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <div id="ui-overlay">
+        <nav class="nav-container" id="main-nav">
+            <a href="#home" class="nav-link active" data-target="home">Home</a>
+            <a href="#simulation" class="nav-link" data-target="simulation">Simulation</a>
+            <a href="#archive" class="nav-link" data-target="archive">Archive</a>
+            <a href="#manifests" class="nav-link" data-target="manifests">Manifests</a>
+            <a href="#protocols" class="nav-link" data-target="protocols">Protocols</a>
+            <a href="#comms" class="nav-link" data-target="comms">Comms</a>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- SECTION: HOME -->
+        <section id="home" class="active">
+            <div class="text-center z-20 pointer-events-none select-none">
+                <h1 id="welcome-text" class="enoxia-title-style">ENOXIA<br><span class="text-2xl font-sans tracking-[0.5em] text-white/60 text-shadow-none">THE AWAKENING</span></h1>
+            </div>
+            <div id="status-bar">
+                <span class="text-yellow-400 animate-pulse">●</span> ESTABLISHING UPLINK... <span class="blink">_</span>
+            </div>
+        </section>
+
+        <!-- SECTION: SIMULATION (Foundry/Syrinscape) -->
+        <section id="simulation">
+            <h2 class="section-header enoxia-title-style">SIMULATION DECK</h2>
+            <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
+                <a href="https://foundryvtt.rpgfiends.com/" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12">
+                    <i data-lucide="monitor-play" class="w-12 h-12 text-watcher-cyan mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">FOUNDRY VTT</h3>
+                    <p class="text-xs text-gray-400">Initialize Virtual Tabletop</p>
+                </a>
+                <a href="https://app.syrinscape.com/80cf2defd71040819f087245b4e902f7/player/" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12">
+                    <i data-lucide="music" class="w-12 h-12 text-magenta-magic mb-4 text-[#d946ef] group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">SYRINSCAPE</h3>
+                    <p class="text-xs text-gray-400">Audio Feed & Ambiance</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- SECTION: ARCHIVE (LegendKeeper) -->
+        <section id="archive">
+            <h2 class="section-header enoxia-title-style">ARCHIVE ACCESS</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl px-4">
+                <a href="https://app.legendkeeper.com/" target="_blank" class="action-btn text-center">
+                    <i data-lucide="database" class="w-4 h-4"></i> MAIN DATABASE
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/ckzef0fi5i28c0808zhyw30as/ckzef0g120002036cqtjlpd5r" target="_blank" class="action-btn text-center border-[#4fffa8] text-[#4fffa8] hover:bg-[#4fffa8]">
+                    <i data-lucide="scroll" class="w-4 h-4"></i> ENOXIA LORE
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/clt34sk1p13j80jkt4y02fyzg/clt34tf7w002q356ixg906ypo" target="_blank" class="action-btn text-center border-purple-500 text-purple-500 hover:bg-purple-500">
+                    <i data-lucide="skull" class="w-4 h-4"></i> CALL OF CTHULHU
+                </a>
+                <a href="https://app.legendkeeper.com/a/worlds/cl7ta2od0lrrs0710y352bvyl/cl7ta2p7m0002033c3rzcubzu" target="_blank" class="action-btn text-center border-green-600 text-green-600 hover:bg-green-600">
+                    <i data-lucide="triangle" class="w-4 h-4"></i> DELTA GREEN
+                </a>
+            </div>
+        </section>
+
+        <!-- SECTION: MANIFESTS -->
+        <section id="manifests">
+            <h2 class="section-header enoxia-title-style">LIVE UNIT MANIFESTS</h2>
+            <!-- Grid where live cards are injected -->
+            <div class="card-grid" id="manifest-grid">
+                <!-- Loading State Initial -->
+                <div class="col-span-full text-center text-watcher-cyan animate-pulse">
+                    SCANNING BIOMETRIC SIGNATURES...
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: PROTOCOLS -->
+        <section id="protocols">
+            <h2 class="section-header enoxia-title-style">SYSTEM PROTOCOLS</h2>
+            <div class="card-grid">
+                <div class="manifest-card cursor-default">
+                    <h3 class="text-xl font-bold text-enoxia-green mb-2">PROTOCOL 01: AEONIC LAW</h3>
+                    <p class="text-sm text-gray-400">Direct interaction with the Ever-When is strictly prohibited. Causality breaches will result in immediate termination.</p>
+                </div>
+                <div class="manifest-card cursor-default">
+                    <h3 class="text-xl font-bold text-watcher-cyan mb-2">PROTOCOL 02: AVARICE</h3>
+                    <p class="text-sm text-gray-400">The Red Moon is a hostile entity. Report all chaotic fluctuations or red mana spikes to the Citadel immediately.</p>
+                </div>
+                <div class="manifest-card cursor-default">
+                    <h3 class="text-xl font-bold text-[#ff00ff] mb-2">PROTOCOL 03: THE BREACH</h3>
+                    <p class="text-sm text-gray-400">Inter-planar travel is restricted. The Watcher monitors all teleportation signatures for Serpent incursions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: COMMS (Socials) -->
+        <section id="comms">
+            <h2 class="section-header enoxia-title-style">SUBSPACE COMMS</h2>
+            <div class="flex flex-wrap justify-center gap-6 w-full max-w-4xl px-4">
+                <a href="https://discord.gg/4UQkFYRuCv" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12 border-[#5865F2] hover:shadow-[0_0_20px_#5865F2]">
+                    <i data-lucide="message-circle" class="w-12 h-12 text-[#5865F2] mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">DISCORD</h3>
+                    <p class="text-xs text-gray-400">Join the Community</p>
+                </a>
+                <a href="https://www.youtube.com/@RPGFIENDS/playlists" target="_blank" class="manifest-card flex-1 min-w-[300px] group flex flex-col items-center text-center py-12 border-[#FF0000] hover:shadow-[0_0_20px_#FF0000]">
+                    <i data-lucide="youtube" class="w-12 h-12 text-[#FF0000] mb-4 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">YOUTUBE</h3>
+                    <p class="text-xs text-gray-400">Session Recordings</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Unit Modal -->
+    <div id="modal-backdrop">
+        <div id="modal-content">
+            <button id="modal-close" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div class="flex items-baseline justify-between border-b border-gray-700 pb-4 mb-4">
+                <h3 id="m-name" class="text-3xl font-bold text-white font-['Cinzel_Decorative']">UNIT NAME</h3>
+                <span id="m-status" class="text-xs border px-2 py-1 rounded">ACTIVE</span>
+            </div>
+            <div class="space-y-3 text-sm font-mono">
+                <p><span class="text-gray-500">RACE:</span> <span id="m-race" class="text-watcher-cyan">Undefined</span></p>
+                <p><span class="text-gray-500">CLASS:</span> <span id="m-class" class="text-white">None</span></p>
+                <p><span class="text-gray-500">HP VITALS:</span> <span id="m-hp" class="text-enoxia-green">Unknown</span></p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-800">
+                <a id="m-link" href="#" target="_blank" class="block w-full text-center bg-watcher-cyan/10 border border-watcher-cyan text-watcher-cyan py-3 hover:bg-watcher-cyan hover:text-black transition-colors">
+                    ACCESS D&D BEYOND DATASTREAM
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- D&D BEYOND INTEGRATION CONFIG ---
+        const PARTY_IDS = ['66469341', '10217862', '8679435', '11474097'];
+        const PROXY_URL = "https://corsproxy.io/?";
+        const GRID = document.getElementById('manifest-grid');
+        let currentTarget = null; 
+
+        // Pre-calculated 3D targets for the eye to look at for the 4 party members
+        const TARGET_COORDS = [
+            { x: 1.5, y: 1.5, z: 1.5 },
+            { x: -1.5, y: -1.5, z: 1.0 },
+            { x: 0, y: 2.5, z: 0.5 },
+            { x: 2.0, y: 0, z: -1.0 }
+        ];
+
+        async function initManifests() {
+            GRID.innerHTML = ''; // Clear loading text
+            
+            PARTY_IDS.forEach((id, index) => {
+                // Create Placeholder
+                const card = document.createElement('div');
+                card.className = 'manifest-card flex flex-col justify-center items-center';
+                card.id = `card-${id}`;
+                card.innerHTML = `<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#00f3ff]"></div>`;
+                GRID.appendChild(card);
+
+                // Setup Watcher Interaction immediately
+                const coords = TARGET_COORDS[index % TARGET_COORDS.length];
+                card.addEventListener('mouseenter', () => {
+                    currentTarget = new THREE.Vector3(coords.x, coords.y, coords.z);
+                    card.classList.add('targeting');
+                });
+                card.addEventListener('mouseleave', () => {
+                    currentTarget = null;
+                    card.classList.remove('targeting');
+                });
+
+                // Fetch
+                fetchCharacter(id, card);
+            });
+        }
+
+        async function fetchCharacter(id, cardEl) {
+            const ddbApiUrl = `https://character-service.dndbeyond.com/character/v5/character/${id}`;
+            try {
+                const response = await fetch(PROXY_URL + encodeURIComponent(ddbApiUrl));
+                if (!response.ok) throw new Error("Signal Lost");
+                const json = await response.json();
+                
+                if (!json.success && !json.data) throw new Error("Corrupted Data");
+
+                // Process Stats
+                const finalStats = calculateAbilityScores(json.data);
+                const totalLevel = json.data.classes.reduce((sum, c) => sum + c.level, 0);
+                const hpData = calculateHP(json.data, finalStats[2].mod, totalLevel);
+
+                renderCard(cardEl, json.data, hpData, totalLevel);
+
+            } catch (err) {
+                console.error(err);
+                cardEl.innerHTML = `<div class="text-red-500 font-bold text-center">SIGNAL LOST<br><span class="text-xs opacity-50">${id}</span></div>`;
+                cardEl.style.borderColor = "var(--color-avarice-red)";
+            }
+        }
+
+        function renderCard(card, data, hpData, level) {
+            const name = data.name || "Unknown";
+            const race = data.race.fullName;
+            const mainClass = data.classes[0].definition.name;
+            const avatar = data.avatarUrl || data.decorations?.avatarUrl || "https://www.dndbeyond.com/content/skins/waterdeep/images/characters/default-avatar.png";
+            const sheetUrl = data.readonlyUrl;
+
+            // Status Calculation
+            const hpPercent = (hpData.current / hpData.max) * 100;
+            let status = "OPTIMAL";
+            let statusColor = "text-[#4fffa8]";
+            let barColor = "#4fffa8";
+
+            if (hpPercent < 75) { status = "DAMAGED"; statusColor = "text-yellow-400"; barColor = "#facc15"; }
+            if (hpPercent < 25) { status = "CRITICAL"; statusColor = "text-[#ff3333]"; barColor = "#ff3333"; }
+            if (hpData.current <= 0) { status = "OFFLINE"; statusColor = "text-gray-500"; barColor = "#6b7280"; }
+
+            card.innerHTML = `
+                <!-- New Overlay: Engage Data Stream -->
+                <div class="datastream-overlay">
+                    <div class="datastream-text">>> ENGAGE DATA STREAM <<</div>
+                </div>
+
+                <div class="flex justify-between items-start w-full mb-4 relative z-0">
+                    <div class="flex items-center gap-3">
+                        <img src="${avatar}" class="ddb-avatar" alt="Av">
+                        <div>
+                            <h3 class="text-lg font-bold text-white leading-none">${name}</h3>
+                            <p class="text-xs text-gray-500 font-mono mt-1">${race} // ${mainClass} ${level}</p>
+                        </div>
+                    </div>
+                    <div class="text-xs border px-2 py-1 rounded ${statusColor} border-current font-bold tracking-wider">
+                        ${status}
+                    </div>
+                </div>
+                
+                <div class="w-full mt-auto relative z-0">
+                    <div class="flex justify-between text-xs font-mono text-[#00f3ff] mb-1">
+                        <span>VITALS INTEGRITY</span>
+                        <span>${hpData.current} / ${hpData.max}</span>
+                    </div>
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" style="width: ${hpPercent}%; background: ${barColor};"></div>
+                    </div>
+                </div>
+            `;
+
+            // DIRECT LINK (Bypass Modal)
+            card.addEventListener('click', () => {
+                window.open(sheetUrl, '_blank');
+            });
+        }
+
+        // --- MATH LOGIC (From previous code) ---
+        function calculateAbilityScores(data) {
+            const stats = [0,0,0,0,0,0].map((_, i) => ({ 
+                value: (data.stats[i].value || 10) + ((data.bonusStats?.[i]?.value) || 0),
+                mod: 0, id: i+1 
+            }));
+
+            const apply = (mod) => { if (mod.type==='bonus' && mod.entityId>=1 && mod.entityId<=6) stats[mod.entityId-1].value += mod.value; };
+            const set = (mod) => { if (mod.type==='set' && mod.entityId>=1 && mod.entityId<=6 && mod.value > stats[mod.entityId-1].value) stats[mod.entityId-1].value = mod.value; };
+            const groups = ['race','class','background','feat','condition'];
+            
+            groups.forEach(g => data.modifiers[g]?.forEach(apply));
+            data.modifiers.item?.forEach(m => { if (data.inventory.find(i=>i.id===m.componentId)?.equipped) apply(m); });
+            groups.forEach(g => data.modifiers[g]?.forEach(set));
+            data.modifiers.item?.forEach(m => { if (data.inventory.find(i=>i.id===m.componentId)?.equipped) set(m); });
+            data.overrideStats?.forEach((s,i) => { if(s.value) stats[i].value = s.value; });
+            
+            return stats.map(s => ({ value: s.value, mod: Math.floor((s.value-10)/2) }));
+        }
+
+        function calculateHP(data, conMod, totalLevel) {
+            let max = data.overrideHitPoints || ((data.baseHitPoints||0)+(data.bonusHitPoints||0)+(totalLevel*conMod));
+            if (!data.overrideHitPoints) {
+                const groups = ['race','class','background','item','feat','condition'];
+                groups.forEach(g => data.modifiers[g]?.forEach(m => { if(m.type==='bonus' && m.subType==='hit-points-per-level') max += (m.value||1)*totalLevel; }));
+            }
+            return { current: max - (data.removedHitPoints||0), max: max };
+        }
+
+
+        // --- NAVIGATION LOGIC ---
+        const links = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section');
+        const navContainer = document.getElementById('main-nav');
+        let isWarping = false;
+        let currentSection = 'home'; 
+
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.dataset.target;
+                currentSection = target;
+
+                links.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                sections.forEach(sec => sec.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+                
+                // TRIGGER INIT IF MANIFESTS
+                if(target === 'manifests') initManifests();
+
+                triggerGlitch();
+                moveCamera(target);
+            });
+        });
+
+        function triggerGlitch() {
+            navContainer.classList.add('glitching');
+            navContainer.classList.add('ui-glitch-active');
+            if(typeof rgbShift !== 'undefined') {
+                gsap.to(rgbShift.uniforms['amount'], { value: 0.005, duration: 0.1, yoyo: true, repeat: 3 });
+                gsap.to(rgbShift.uniforms['amount'], { value: 0, duration: 0.1, delay: 0.4 });
+            }
+            setTimeout(() => {
+                navContainer.classList.remove('glitching');
+                navContainer.classList.remove('ui-glitch-active');
+            }, 400);
+        }
+
+        function moveCamera(target) {
+            let pos = { x: 0, y: 0, z: 12 }; 
+            let lookAt = { x: 0, y: 0, z: 0 };
+
+            if (target === 'manifests') { pos = { x: -6, y: 5, z: 9 }; lookAt = { x: 2, y: -1, z: 0 }; }
+            else if (target === 'protocols') { pos = { x: 0, y: -6, z: 10 }; lookAt = { x: 0, y: 2, z: 0 }; }
+            else if (target === 'simulation') { pos = { x: 6, y: 4, z: 8 }; lookAt = { x: -2, y: 0, z: 0 }; }
+            else if (target === 'comms') { pos = { x: -5, y: -2, z: 8 }; lookAt = { x: 2, y: 1, z: 0 }; }
+            
+            isWarping = true;
+            
+            if(target !== 'archive') {
+                 gsap.to(camera.position, {
+                    x: pos.x, y: pos.y, z: pos.z,
+                    duration: 1.8,
+                    ease: "power3.inOut",
+                    onComplete: () => { isWarping = false; }
+                });
+                gsap.to(controls.target, {
+                    x: lookAt.x, y: lookAt.y, z: lookAt.z,
+                    duration: 1.8,
+                    ease: "power3.inOut"
+                });
+            } else {
+                 setTimeout(() => { isWarping = false; }, 1800);
+            }
+        }
+
+        // --- MODAL LOGIC (KEPT BUT UNUSED FOR MANIFESTS) ---
+        const modal = document.getElementById('modal-backdrop');
+        const closeBtn = document.getElementById('modal-close');
+
+        function openModal(data) {
+            // Logic kept if needed for other cards, but ignored for manifests now
+            document.getElementById('m-name').textContent = data.name;
+            const statusEl = document.getElementById('m-status');
+            statusEl.textContent = data.status;
+            statusEl.className = data.statusColor;
+            document.getElementById('m-race').textContent = data.race;
+            document.getElementById('m-class').textContent = data.class;
+            document.getElementById('m-hp').textContent = data.hp;
+            document.getElementById('m-link').href = data.link;
+            modal.classList.add('visible');
+            triggerGlitch();
+        }
+        closeBtn.onclick = () => modal.classList.remove('visible');
+        modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('visible'); };
+
+        // --- SERVER STATUS CHECK (Delayed w/ Image Hack) ---
+        const foundryUrl = "https://foundryvtt.rpgfiends.com"; 
+        const statusEl = document.getElementById('status-bar');
+
+        function checkServer() {
+            setTimeout(() => {
+                const img = new Image();
+                img.src = foundryUrl + "/icons/svg/d20-grey.svg?t=" + new Date().getTime();
+                img.onload = function() {
+                    statusEl.innerHTML = '<span class="text-green-400">●</span> SYSTEM ONLINE // WATCHER PROTOCOL ACTIVE <span class="blink">_</span>';
+                    statusEl.style.color = "var(--color-watcher-cyan)";
+                    statusEl.style.borderColor = "rgba(0, 243, 255, 0.3)";
+                };
+                img.onerror = function() {
+                    statusEl.innerHTML = '<span class="text-red-500">●</span> SIGNAL LOST // OFFLINE <span class="blink">_</span>';
+                    statusEl.style.color = "var(--color-avarice-red)"; 
+                    statusEl.style.borderColor = "rgba(255, 50, 50, 0.3)";
+                };
+            }, 3000); 
+        }
+        
+        window.addEventListener('load', checkServer);
+
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030305, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 12;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping; 
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enableZoom = false;
+
+        // --- POST PROCESSING ---
+        const composer = new THREE.EffectComposer(renderer);
+        const renderPass = new THREE.RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const bloomPass = new THREE.UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.5, 0.4, 0.85
+        );
+        bloomPass.threshold = 0;
+        bloomPass.strength = 1.5; 
+        bloomPass.radius = 0.4;
+        composer.addPass(bloomPass);
+
+        const rgbShift = new THREE.ShaderPass(THREE.RGBShiftShader);
+        rgbShift.uniforms['amount'].value = 0.000; 
+        composer.addPass(rgbShift);
+
+        // --- OBJECTS ---
+        const planetGroup = new THREE.Group();
+        scene.add(planetGroup);
+
+        const geometry = new THREE.IcosahedronGeometry(3, 2); 
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x1a2e28, 
+            roughness: 0.7,
+            flatShading: true,
+            emissive: 0x05100a,
+            emissiveIntensity: 0.5
+        });
+        const planet = new THREE.Mesh(geometry, material);
+        planetGroup.add(planet);
+
+        const atmosphereGeo = new THREE.SphereGeometry(3.3, 64, 64);
+        const atmosphereMat = new THREE.ShaderMaterial({
+            uniforms: {},
+            vertexShader: `varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `varying vec3 vNormal; void main() { float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 4.0); gl_FragColor = vec4(0.3, 1.0, 0.6, 1.0) * intensity; }`,
+            blending: THREE.AdditiveBlending,
+            side: THREE.BackSide,
+            transparent: true
+        });
+        const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+        planetGroup.add(atmosphere);
+
+        const netGeo = new THREE.IcosahedronGeometry(3.05, 2);
+        const netMat = new THREE.MeshBasicMaterial({ visible: false }); 
+        const net = new THREE.Mesh(netGeo, netMat);
+        planetGroup.add(net);
+
+        const vertices = [];
+        const posAttribute = netGeo.attributes.position;
+        for (let i = 0; i < posAttribute.count; i++) {
+            const v = new THREE.Vector3();
+            v.fromBufferAttribute(posAttribute, i);
+            vertices.push(v);
+        }
+
+        const pulses = [];
+        const riverShader = {
+            uniforms: { time: { value: 0 }, color: { value: new THREE.Color(0xd946ef) }, progress: { value: 0 } },
+            vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `uniform vec3 color; uniform float progress; varying vec2 vUv; void main() { float trail = 0.0; if(vUv.x < progress && vUv.x > progress - 0.8) { trail = 1.0 - (progress - vUv.x) / 0.8; trail = pow(trail, 2.0); } if(vUv.x > progress && vUv.x < progress + 0.05) { trail = 1.0 - (vUv.x - progress) / 0.05; } if(trail < 0.01) discard; gl_FragColor = vec4(color * 2.0, trail); }`,
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+        };
+
+        function spawnPulse() {
+            const startIdx = Math.floor(Math.random() * vertices.length);
+            const start = vertices[startIdx];
+            let endIdx = -1, tries = 0;
+            while(endIdx === -1 && tries < 50) {
+                const testIdx = Math.floor(Math.random() * vertices.length);
+                if(start.distanceTo(vertices[testIdx]) > 2.0) endIdx = testIdx;
+                tries++;
+            }
+            
+            if(endIdx !== -1) {
+                const end = vertices[endIdx];
+                const mid = start.clone().add(end).multiplyScalar(0.5).normalize().multiplyScalar(3.05); 
+                const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+                const geo = new THREE.TubeGeometry(curve, 40, 0.01, 8, false); 
+                const mat = new THREE.ShaderMaterial({
+                    uniforms: { color: { value: new THREE.Color(0xd946ef) }, progress: { value: 0 } },
+                    vertexShader: riverShader.vertexShader,
+                    fragmentShader: riverShader.fragmentShader,
+                    transparent: true, blending: THREE.AdditiveBlending
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                planetGroup.add(mesh);
+                pulses.push({ mesh: mesh, progress: -0.2, speed: 0.006 + Math.random() * 0.004 }); 
+            }
+        }
+
+        const watcherGroup = new THREE.Group();
+        scene.add(watcherGroup);
+        const paleMoon = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 2), new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.3 }));
+        watcherGroup.add(paleMoon);
+        const eyeCore = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+        paleMoon.add(eyeCore);
+        const pupil = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.12, 32), new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide }));
+        pupil.position.z = 0.26; eyeCore.add(pupil);
+
+        const beamGeo = new THREE.CylinderGeometry(0.005, 0.04, 1, 8, 1, true);
+        beamGeo.translate(0, 0.5, 0); 
+        beamGeo.rotateX(Math.PI / 2);
+        const beamMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        watcherGroup.add(beam);
+
+        const redMoon = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), new THREE.MeshBasicMaterial({ color: 0xff3333 }));
+        scene.add(redMoon);
+
+        // Stars Setup
+        const starCount = 15000;
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(starCount * 3);
+        const starSizes = new Float32Array(starCount); 
+        for(let i=0; i<starCount; i++) {
+            starPos[i*3] = (Math.random() - 0.5) * 400;
+            starPos[i*3+1] = (Math.random() - 0.5) * 400;
+            starPos[i*3+2] = (Math.random() - 0.5) * 400;
+            starSizes[i] = Math.random();
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+        const starShaderMat = new THREE.ShaderMaterial({
+            uniforms: { time: { value: 0 }, warpFactor: { value: 0 } },
+            vertexShader: `attribute float size; uniform float warpFactor; varying float vAlpha; void main() { vec3 pos = position; pos.z += pos.z * warpFactor * 2.0; vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0); gl_PointSize = (size * 2.0 + warpFactor * 5.0) * (200.0 / -mvPosition.z); gl_Position = projectionMatrix * mvPosition; vAlpha = 0.6 + size * 0.4; }`,
+            fragmentShader: `varying float vAlpha; void main() { vec2 coord = gl_PointCoord - vec2(0.5); if(length(coord) > 0.5) discard; gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha); }`,
+            transparent: true
+        });
+        const stars = new THREE.Points(starGeo, starShaderMat);
+        scene.add(stars);
+
+        scene.add(new THREE.AmbientLight(0x404040));
+        const sun = new THREE.PointLight(0xffffff, 1.5); sun.position.set(10, 10, 10); scene.add(sun);
+        planetGroup.add(new THREE.PointLight(0xd946ef, 1, 10));
+        paleMoon.add(new THREE.PointLight(0x00f3ff, 2, 5));
+
+        const mouse = new THREE.Vector2();
+        const dummyTarget = new THREE.Vector3();
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX - window.innerWidth/2);
+            mouse.y = (e.clientY - window.innerHeight/2);
+        });
+
+        const clock = new THREE.Clock();
+        let spawnTimer = 0;
+        let orbitTime = 0; 
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            controls.update();
+
+            planetGroup.rotation.y = time * 0.05;
+            spawnTimer++;
+            if(spawnTimer > 80) { spawnPulse(); spawnTimer = 0; }
+
+            for(let i = pulses.length - 1; i >= 0; i--) {
+                const p = pulses[i];
+                p.progress += p.speed;
+                p.mesh.material.uniforms.progress.value = p.progress;
+                if(p.progress > 1.6) {
+                    planetGroup.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); pulses.splice(i, 1);
+                }
+            }
+
+            orbitTime += 0.002;
+            watcherGroup.position.set(Math.cos(orbitTime) * 6, Math.sin(orbitTime) * 1, Math.sin(orbitTime) * 6);
+
+            if(currentSection === 'archive') {
+                const toMoon = watcherGroup.position.clone().normalize();
+                const up = new THREE.Vector3(0, 1, 0);
+                const right = new THREE.Vector3().crossVectors(up, toMoon).normalize();
+                
+                const targetCamPos = watcherGroup.position.clone();
+                targetCamPos.add(toMoon.multiplyScalar(1.2)); 
+                targetCamPos.add(right.multiplyScalar(1.0)); 
+                targetCamPos.y += 0.5; 
+                
+                camera.position.lerp(targetCamPos, 0.1);
+                controls.target.lerp(watcherGroup.position, 0.1);
+                watcherGroup.lookAt(camera.position);
+                paleMoon.rotation.set(0,0,0);
+            } 
+            else if(currentTarget) {
+                const worldTarget = currentTarget.clone().normalize().multiplyScalar(3.05); 
+                worldTarget.applyMatrix4(planetGroup.matrixWorld);
+                watcherGroup.lookAt(worldTarget);
+                paleMoon.rotation.set(0, 0, 0);
+                const dist = watcherGroup.position.distanceTo(worldTarget);
+                beam.scale.z = dist; 
+                beamMat.opacity += (0.8 - beamMat.opacity) * 0.1;
+            } else {
+                dummyTarget.set(mouse.x*0.01, -mouse.y*0.01, 10);
+                watcherGroup.lookAt(dummyTarget);
+                paleMoon.rotation.set(0, 0, 0);
+                beamMat.opacity += (0.0 - beamMat.opacity) * 0.1;
+            }
+
+            redMoon.position.set(Math.cos(time*0.3)*5, Math.sin(time*0.5)*2, Math.sin(time*0.4)*7);
+            
+            if(isWarping) {
+                starShaderMat.uniforms.warpFactor.value += (1.0 - starShaderMat.uniforms.warpFactor.value) * 0.05;
+            } else {
+                starShaderMat.uniforms.warpFactor.value += (0.0 - starShaderMat.uniforms.warpFactor.value) * 0.05;
+            }
+            stars.rotation.y = time * 0.002;
+
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+
+    </script>
+</body>
+</html>

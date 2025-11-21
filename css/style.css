@@ -1,0 +1,653 @@
+:root {
+    --color-enoxia-green: #4fffa8;
+    --color-watcher-cyan: #00f3ff;
+    --color-avarice-red: #ff3333;
+    --color-magenta-magic: #d946ef;
+    --bg-deep-space: #030305;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background-color: var(--bg-deep-space);
+    color: white;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* UI GLITCH EFFECT */
+.ui-glitch-active {
+    animation: ui-glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+    color: var(--color-watcher-cyan);
+}
+
+@keyframes ui-glitch {
+    0% {
+        transform: translate(0)
+    }
+
+    20% {
+        transform: translate(-2px, 2px)
+    }
+
+    40% {
+        transform: translate(-2px, -2px)
+    }
+
+    60% {
+        transform: translate(2px, 2px)
+    }
+
+    80% {
+        transform: translate(2px, -2px)
+    }
+
+    100% {
+        transform: translate(0)
+    }
+}
+
+/* UI Overlay */
+#ui-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    z-index: 50;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-container {
+    pointer-events: auto;
+    display: flex;
+    gap: 1.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1rem 2rem;
+    border-radius: 99px;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-container.glitching {
+    border-color: var(--color-magenta-magic);
+    box-shadow: 0 0 15px var(--color-magenta-magic);
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--color-watcher-cyan);
+    text-shadow: 0 0 10px var(--color-watcher-cyan);
+}
+
+/* Sections */
+main {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+section {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    pointer-events: none;
+    padding-top: 80px;
+}
+
+section.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Typography */
+/* The Main Title Style */
+.enoxia-title-style {
+    font-family: 'Cinzel Decorative', serif;
+    text-shadow:
+        0 0 10px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(79, 255, 168, 0.2);
+    line-height: 1;
+    position: relative;
+    z-index: 20;
+}
+
+#welcome-text {
+    font-size: clamp(4rem, 8vw, 8rem);
+    color: var(--color-enoxia-green);
+}
+
+/* Section Headers using the same style but smaller */
+.section-header {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: var(--color-watcher-cyan);
+    /* Cyan by default, can override */
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+#status-bar {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: var(--color-watcher-cyan);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    backdrop-filter: blur(4px);
+    transition: all 0.5s ease;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.card-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-grid::-webkit-scrollbar-track {
+    background: #050505;
+}
+
+.card-grid::-webkit-scrollbar-thumb {
+    background: #00f3ff;
+    border-radius: 3px;
+}
+
+.manifest-card {
+    background: rgba(10, 15, 20, 0.7);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    position: relative;
+    /* overflow: hidden; REMOVED */
+}
+
+.manifest-card:hover {
+    background: rgba(0, 243, 255, 0.1);
+    border-color: var(--color-watcher-cyan);
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+}
+
+.manifest-card.targeting {
+    border-color: #ffff00;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+}
+
+.manifest-card.targeting::after {
+    content: '[ TARGET LOCKED ]';
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: #ffff00;
+    color: black;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--color-watcher-cyan);
+    color: var(--color-watcher-cyan);
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.action-btn:hover {
+    background: var(--color-watcher-cyan);
+    color: black;
+    box-shadow: 0 0 20px var(--color-watcher-cyan);
+}
+
+/* Modal */
+#modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+#modal-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#modal-content {
+    background: #0a0a0e;
+    border: 2px solid var(--color-watcher-cyan);
+    width: 90%;
+    max-width: 600px;
+    padding: 2rem;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+}
+
+#modal-backdrop.visible #modal-content {
+    transform: scale(1);
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Volume Slider */
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--color-watcher-cyan);
+    border-radius: 99px;
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-watcher-cyan);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--color-watcher-cyan);
+    transition: transform 0.2s;
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-watcher-cyan);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px var(--color-watcher-cyan);
+    transition: transform 0.2s;
+}
+
+#volume-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+}
+
+.volume-visible {
+    display: flex !important;
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* D&D Specific Styles for Manifest */
+.ddb-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--color-watcher-cyan);
+    object-fit: cover;
+}
+
+.hp-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+    position: relative;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: var(--color-enoxia-green);
+    transition: width 0.5s ease;
+}
+
+/* ENGAGE DATA STREAM ANIMATION (Modified to be subtle) */
+.datastream-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 24px;
+    /* Matches bottom padding */
+    /* Only cover bottom */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 15;
+    backdrop-filter: blur(1px);
+}
+
+.manifest-card:hover .datastream-overlay {
+    opacity: 1;
+}
+
+.datastream-text {
+    color: #ffff00;
+    font-weight: bold;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse-text 1.5s infinite;
+}
+
+@keyframes pulse-text {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 10px #ffff00;
+    }
+}
+
+/* --- HOLOGRAPHIC AVATAR EFFECT --- */
+.manifest-card:hover .ddb-avatar {
+    filter: sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2);
+    box-shadow: 0 0 15px var(--color-watcher-cyan), inset 0 0 10px var(--color-watcher-cyan);
+    animation: holo-flicker 0.1s infinite;
+    position: relative;
+}
+
+/* Scanlines overlay for avatar - requires wrapping avatar or using ::after on parent if possible. 
+   Since img tags can't have ::after, we'll apply a scanline background to the image itself using multiple backgrounds if supported, 
+   or rely on the filter + border. Let's stick to the filter + border for simplicity and robustness. */
+
+@keyframes holo-flicker {
+    0% {
+        opacity: 0.9;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+#modal-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#modal-content {
+    background: #0a0a0e;
+    border: 2px solid var(--color-watcher-cyan);
+    width: 90%;
+    max-width: 600px;
+    padding: 2rem;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+}
+
+#modal-backdrop.visible #modal-content {
+    transform: scale(1);
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Volume Slider */
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--color-watcher-cyan);
+    border-radius: 99px;
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-watcher-cyan);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--color-watcher-cyan);
+    transition: transform 0.2s;
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-watcher-cyan);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px var(--color-watcher-cyan);
+    transition: transform 0.2s;
+}
+
+#volume-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+}
+
+.volume-visible {
+    display: flex !important;
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* D&D Specific Styles for Manifest */
+.ddb-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--color-watcher-cyan);
+    object-fit: cover;
+}
+
+.hp-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+    position: relative;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: var(--color-enoxia-green);
+    transition: width 0.5s ease;
+}
+
+/* ENGAGE DATA STREAM ANIMATION (Modified to be subtle) */
+.datastream-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 24px;
+    /* Matches bottom padding */
+    /* Only cover bottom */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 15;
+    backdrop-filter: blur(1px);
+}
+
+.manifest-card:hover .datastream-overlay {
+    opacity: 1;
+}
+
+.datastream-text {
+    color: #ffff00;
+    font-weight: bold;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse-text 1.5s infinite;
+}
+
+@keyframes pulse-text {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 10px #ffff00;
+    }
+}
+
+/* --- HOLOGRAPHIC AVATAR EFFECT --- */
+.manifest-card:hover .ddb-avatar {
+    filter: sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2);
+    box-shadow: 0 0 15px var(--color-watcher-cyan), inset 0 0 10px var(--color-watcher-cyan);
+    animation: holo-flicker 0.1s infinite;
+    position: relative;
+}
+
+/* Scanlines overlay for avatar - requires wrapping avatar or using ::after on parent if possible. 
+   Since img tags can't have ::after, we'll apply a scanline background to the image itself using multiple backgrounds if supported, 
+   or rely on the filter + border. Let's stick to the filter + border for simplicity and robustness. */
+
+@keyframes holo-flicker {
+    0% {
+        opacity: 0.9;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.95;
+    }
+}
